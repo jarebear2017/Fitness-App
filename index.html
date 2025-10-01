@@ -124,7 +124,6 @@
         <span id="hMsg" class="badge muted"></span>
       </div>
 
-      <!-- NEW: Visuals -->
       <div class="card" style="margin-top:16px">
         <div class="inline" style="justify-content:space-between">
           <h3 style="margin:0">Weekly Hours — Progress to Minimum</h3>
@@ -203,17 +202,19 @@
 
 <script>
 // === CONFIG ===
-const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz7mE2UDBSC4jc15lj7n8bTqY-mXJq8npKxHG_YtNr0tz8Phg14Smb3Fk1O1IuuBmek/exec';
-const SECRET = 'FitnessChallenge2025';
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz7mE2UDBSC4jc15lj7n8bTqY-mXJq8npKxHG_YtNr0tz8Phg14Smb3Fk1O1IuuBmek/exec'; // <-- your /exec URL
+const SECRET = 'FitnessChallenge2025'; // MUST equal SHARED_SECRET in Code.gs
 const CONTESTANTS = ['Jared','Daniel','Morgan','Caleb','Randy','Cindy','Contestant 7','Contestant 8'];
 
-// Header tag
 document.getElementById('baselineTag').textContent = 'Baseline: 5 hr/wk';
 
 // Populate dropdowns
 function fillNames(){
-  const selects = ['bName','hName','cName'].map(id=>document.getElementById(id)).filter(Boolean);
-  selects.forEach(s => s.innerHTML = '<option value="">Select</option>' + CONTESTANTS.map(n=>`<option>${n}</option>`).join(''));
+  ['bName','hName','cName'].forEach(id=>{
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '<option value="">Select</option>' + CONTESTANTS.map(n=>`<option>${n}</option>`).join('');
+  });
 }
 fillNames();
 
@@ -226,39 +227,36 @@ document.querySelectorAll('.tab').forEach(btn=>{
     ['baseline','hours','checkin','board','info'].forEach(id=>{
       document.getElementById(id).style.display = (id===tab)?'block':'none';
     });
-    if(tab==='board') loadBoard();
-    if(tab==='hours') loadHoursVisual();
+    if (tab==='board') loadBoard();
+    if (tab==='hours') loadHoursVisual();
   });
 });
 
-// Robust fetch helper (shows server output in console if not JSON)
+// Robust fetch (text/plain to avoid preflight)
 async function postJSON(payload){
   try{
     const res = await fetch(WEBAPP_URL, {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({...payload, secret: SECRET})
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify({ ...payload, secret: SECRET })
     });
     const text = await res.text();
     try { return JSON.parse(text); }
     catch { console.error('Non-JSON response:', text); return { ok:false, error:'Non-JSON response' }; }
   }catch(err){ console.error('Fetch failed:', err); return { ok:false, error:'Fetch failed' }; }
 }
-async function getJSON(){
+async function getJSON(qs=''){
+  const url = qs ? `${WEBAPP_URL}?${qs}` : WEBAPP_URL;
   try{
-    const res = await fetch(WEBAPP_URL);
+    const res = await fetch(url);
     const text = await res.text();
     try { return JSON.parse(text); }
     catch { console.error('Non-JSON response:', text); return { ok:false, error:'Non-JSON response' }; }
   }catch(err){ console.error('Fetch failed:', err); return { ok:false, error:'Fetch failed' }; }
 }
+function badge(el, ok, msg){ el.textContent = msg; el.className = 'badge ' + (ok ? 'ok' : 'err'); }
 
-function badge(el, ok, msg){
-  el.textContent = msg;
-  el.className = 'badge ' + (ok ? 'ok' : 'err');
-}
-
-// Submit Baseline
+// Buttons
 document.getElementById('bSubmit').onclick = async () => {
   const name = document.getElementById('bName').value.trim();
   const category = document.getElementById('bCat').value;
@@ -271,7 +269,6 @@ document.getElementById('bSubmit').onclick = async () => {
   badge(msg, r.ok, r.ok ? 'Baseline submitted! (Admins will review)' : ('Error: ' + (r.error||'unknown')));
 };
 
-// Submit Weekly Hours
 document.getElementById('hSubmit').onclick = async () => {
   const name = document.getElementById('hName').value.trim();
   const week = Number(document.getElementById('hWeek').value);
@@ -285,7 +282,6 @@ document.getElementById('hSubmit').onclick = async () => {
   if (r.ok) loadHoursVisual();
 };
 
-// Submit Check-in
 document.getElementById('cSubmit').onclick = async () => {
   const name = document.getElementById('cName').value.trim();
   const cat = document.getElementById('cCat').value;
@@ -296,6 +292,11 @@ document.getElementById('cSubmit').onclick = async () => {
   const r = await postJSON({type:'checkin', name, category: cat, date, current});
   badge(msg, r.ok, r.ok ? 'Check-in submitted!' : ('Error: ' + (r.error||'unknown')));
 };
+
+// Diagnostics buttons (optional to add in UI, but callable here)
+window.healthCheck = async () => console.log('health:', await getJSON('action=health'));
+window.rebuildTabs  = async () => console.log('rebuild:', await getJSON('action=rebuild'));
+window.selfTestPost = async () => console.log('selftest:', await postJSON({type:'selftest'}));
 
 // Leaderboard
 document.getElementById('refreshBoard').onclick = loadBoard;
@@ -334,7 +335,6 @@ async function loadHoursVisual(){
   const labels = ppl.map(p=>p.name);
   const totals = ppl.map(p=>p.totalHours);
 
-  // Chart: total hours vs required minimum
   const ctx = document.getElementById('hoursChart').getContext('2d');
   if (hoursChart) hoursChart.destroy();
   hoursChart = new Chart(ctx, {
@@ -346,14 +346,9 @@ async function loadHoursVisual(){
         { label: 'Required Minimum', data: labels.map(()=>required) }
       ]
     },
-    options: {
-      responsive:true,
-      plugins:{ legend:{ position:'bottom' } },
-      scales:{ y:{ beginAtZero:true } }
-    }
+    options: { responsive:true, plugins:{ legend:{ position:'bottom' } }, scales:{ y:{ beginAtZero:true } } }
   });
 
-  // Progress bars
   const wrap = document.getElementById('hoursBars');
   wrap.innerHTML = '';
   ppl.forEach(p=>{
@@ -365,12 +360,10 @@ async function loadHoursVisual(){
         <strong>${p.name}</strong>
         <span class="muted">${p.totalHours.toFixed(1)} / ${required.toFixed(1)} hrs (${(pct*100).toFixed(1)}%)</span>
       </div>
-      <div class="progress"><span style="width:${(pct*100).toFixed(1)}%"></span></div>
-    `;
+      <div class="progress"><span style="width:${(pct*100).toFixed(1)}%"></span></div>`;
     wrap.appendChild(row);
   });
 
-  // Update baseline pill
   const bpw = (data.settings && data.settings.baselinePerWeek) || 5;
   document.getElementById('baselineTag').textContent = `Baseline: ${bpw} hr/wk`;
 }
