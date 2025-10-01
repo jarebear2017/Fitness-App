@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fitness Challenge Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0b0d10; --card:#12161b; --muted:#9aa4af; --text:#e6edf3; --acc:#4ade80; --warn:#fbbf24; --err:#f87171; }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0b0d10,#0e1216);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  .container{max-width:980px;margin:0 auto;padding:24px}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  h1{font-size:1.6rem;margin:0}
+  .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 24px rgba(0,0,0,.35)}
+  label{display:block;font-weight:600;margin:10px 0 6px}
+  input,select,button,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid #273241;background:#0f1318;color:var(--text)}
+  textarea{min-height:80px}
+  .btn{background:#1f2937;border:1px solid #2b3746;cursor:pointer;transition:.15s transform ease, .2s background ease}
+  .btn:hover{background:#243041;transform:translateY(-1px)}
+  .btn-primary{background:linear-gradient(90deg,#10b981,#22c55e);border:none;color:#062714;font-weight:700}
+  .grid{display:grid;gap:12px}
+  .grid-2{grid-template-columns:1fr 1fr}
+  .grid-3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:800px){.grid-2,.grid-3{grid-template-columns:1fr}}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th,td{padding:10px;border-bottom:1px solid #1f2937;text-align:left}
+  th{color:#cbd5e1;font-weight:700}
+  .badge{display:inline-block;border-radius:999px;padding:4px 10px;font-size:.8rem}
+  .ok{color:#0f5132;background:#d1fae5;border:1px solid #34d399}
+  .err{color:#7f1d1d;background:#fee2e2;border:1px solid #f87171}
+  .muted{color:var(--muted);font-size:.95rem}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+  .tab{padding:8px 12px;border-radius:12px;border:1px solid #2b3746;background:#0f1318;color:#cbd5e1;cursor:pointer}
+  .tab.active{background:#1f2937;color:#fff}
+  footer{margin-top:20px;color:#94a3b8;font-size:.9rem}
+  .inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .note{font-size:.9rem;color:#cbd5e1}
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Fitness Challenge Portal</h1>
+      <div class="inline">
+        <span class="badge" style="background:#111827;border:1px solid #2b3746;color:#cbd5e1">Oct 3 → Jan 1</span>
+        <span class="badge" style="background:#0f172a;border:1px solid #334155;color:#cbd5e1" id="baselineTag">Baseline: 5 hr/wk</span>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="hours">Weekly Hours</button>
+      <button class="tab" data-tab="checkin">Monthly Check-in</button>
+      <button class="tab" data-tab="board">Leaderboard</button>
+      <button class="tab" data-tab="info">Info</button>
+    </div>
+
+    <section id="hours" class="card">
+      <h2>Submit Weekly Hours</h2>
+      <div class="grid grid-3">
+        <div>
+          <label>Name</label>
+          <select id="hName"></select>
+        </div>
+        <div>
+          <label>Week # (1–13)</label>
+          <input id="hWeek" type="number" min="1" max="13" placeholder="e.g., 1" />
+        </div>
+        <div>
+          <label>Total Hours</label>
+          <input id="hHours" type="number" step="0.1" min="0" placeholder="e.g., 5.0" />
+        </div>
+      </div>
+      <label>Dates (optional)</label>
+      <input id="hDates" placeholder="e.g., Oct 3 – Oct 9">
+      <label>Notes (optional)</label>
+      <input id="hNotes" placeholder="Optional notes">
+      <div class="inline" style="margin-top:10px">
+        <button class="btn btn-primary" id="hSubmit">Submit Hours</button>
+        <span id="hMsg" class="badge muted"></span>
+      </div>
+    </section>
+
+    <section id="checkin" class="card" style="display:none">
+      <h2>Submit Monthly Check-in</h2>
+      <div class="grid grid-3">
+        <div>
+          <label>Name</label>
+          <select id="cName"></select>
+        </div>
+        <div>
+          <label>Date</label>
+          <input id="cDate" type="date" />
+        </div>
+        <div>
+          <label>Current Value</label>
+          <input id="cValue" type="number" step="0.01" placeholder="Number only" />
+        </div>
+      </div>
+      <p class="note">Your category is fixed in the roster (Weight Loss in <b>lb</b>, Mile Time in <b>seconds</b>, Bench Weight in <b>lb</b>). Enter a single number matching your category.</p>
+      <div class="inline" style="margin-top:10px">
+        <button class="btn btn-primary" id="cSubmit">Submit Check-in</button>
+        <span id="cMsg" class="badge muted"></span>
+      </div>
+    </section>
+
+    <section id="board" class="card" style="display:none">
+      <div class="inline" style="justify-content:space-between">
+        <h2>Leaderboard</h2>
+        <button id="refresh" class="btn">Refresh</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Name</th><th>Category</th><th>Start → Target</th>
+            <th>Progress</th><th>Consistency</th><th>Final</th>
+          </tr>
+        </thead>
+        <tbody id="boardBody">
+          <tr><td colspan="7" class="muted">Loading…</td></tr>
+        </tbody>
+      </table>
+      <p class="note" style="margin-top:8px">Tie-breaker: higher consistency wins; then bonus/community vote if enabled.</p>
+    </section>
+
+    <section id="info" class="card" style="display:none">
+      <h2>How it Works</h2>
+      <ul>
+        <li>Baseline: <b>5 hours/week</b> logged.</li>
+        <li>Categories: <b>Weight Loss (lb)</b>, <b>Mile Time (sec)</b>, <b>Bench Weight (lb)</b>.</li>
+        <li>Monthly check-ins (Nov 1, Dec 1, Jan 1) recommended.</li>
+        <li>Progress is normalized so everyone competes fairly. Leaderboard updates from the shared Sheet.</li>
+      </ul>
+      <p class="muted">Powered by Google Apps Script + Google Sheets. Configure <code>WEBAPP_URL</code>, <code>SECRET</code>, and the <code>CONTESTANTS</code> list in the config section below.</p>
+    </section>
+
+    <footer class="container" style="padding:0">
+      <span class="muted">© Fitness Challenge</span>
+    </footer>
+  </div>
+
+<script>
+// === CONFIG ===
+// Paste your Apps Script Web App URL here:
+const WEBAPP_URL = 'PASTE_YOUR_APPS_SCRIPT_WEBAPP_URL';
+// Create a long random secret and paste it in your Apps Script too:
+const SECRET = 'CHANGE_ME_SECRET_32CHARS';
+
+// Set your 8 contestants here (names must match the Roster sheet exactly)
+const CONTESTANTS = [
+  'Contestant 1','Contestant 2','Contestant 3','Contestant 4',
+  'Contestant 5','Contestant 6','Contestant 7','Contestant 8'
+];
+
+// Optional: show your baseline hours on the header tag
+document.getElementById('baselineTag').textContent = 'Baseline: 5 hr/wk';
+
+// Populate dropdowns
+function fillNames(){
+  const selects = [document.getElementById('hName'), document.getElementById('cName')];
+  selects.forEach(s => { s.innerHTML = '<option value="">Select</option>' + CONTESTANTS.map(n=>`<option>${n}</option>`).join(''); });
+}
+fillNames();
+
+// Tabs
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', e=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    ['hours','checkin','board','info'].forEach(id=>{
+      document.getElementById(id).style.display = (id===tab)?'block':'none';
+    });
+    if(tab==='board') loadBoard();
+  });
+});
+
+async function postJSON(payload){
+  const res = await fetch(WEBAPP_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({...payload, secret: SECRET})
+  });
+  return res.json();
+}
+
+function badge(el, ok, msg){
+  el.textContent = msg;
+  el.className = 'badge ' + (ok ? 'ok' : 'err');
+}
+
+document.getElementById('hSubmit').onclick = async () => {
+  const name = document.getElementById('hName').value.trim();
+  const week = Number(document.getElementById('hWeek').value);
+  const hours = Number(document.getElementById('hHours').value);
+  const dates = document.getElementById('hDates').value;
+  const notes = document.getElementById('hNotes').value;
+  const msg = document.getElementById('hMsg');
+  if(!name || !week || isNaN(hours)){ badge(msg,false,'Please fill name, week, and hours'); return; }
+  try{
+    const r = await postJSON({type:'hours', name, week, dates, hours, notes});
+    badge(msg, r.ok, r.ok ? 'Hours submitted!' : ('Error: ' + (r.error||'unknown')));
+  }catch(e){ badge(msg,false,'Network error'); }
+};
+
+document.getElementById('cSubmit').onclick = async () => {
+  const name = document.getElementById('cName').value.trim();
+  const date = document.getElementById('cDate').value;
+  const current = Number(document.getElementById('cValue').value);
+  const msg = document.getElementById('cMsg');
+  if(!name || !date || isNaN(current)){ badge(msg,false,'Please fill name, date, and current value'); return; }
+  try{
+    const r = await postJSON({type:'checkin', name, date, current});
+    badge(msg, r.ok, r.ok ? 'Check-in submitted!' : ('Error: ' + (r.error||'unknown')));
+  }catch(e){ badge(msg,false,'Network error'); }
+};
+
+async function loadBoard(){
+  const body = document.getElementById('boardBody');
+  body.innerHTML = '<tr><td colspan="7" class="muted">Loading…</td></tr>';
+  try{
+    const res = await fetch(WEBAPP_URL);
+    const data = await res.json();
+    if(!data.ok){ body.innerHTML = '<tr><td colspan="7">Error loading board</td></tr>'; return; }
+    const rows = data.leaderboard
+      .filter(r => (r['#'] !== '' && r['#'] != null))
+      .sort((a,b)=> (Number(a['#'])||999) - (Number(b['#'])||999));
+    body.innerHTML='';
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      const pct = v => isNaN(Number(v)) ? '' : (Number(v)*100).toFixed(1)+'%';
+      tr.innerHTML = `
+        <td>${r['#']}</td>
+        <td>${r['Name']}</td>
+        <td>${r['Category']||''}</td>
+        <td>${r['Start → Target']||''}</td>
+        <td>${pct(r['Progress %'])}</td>
+        <td>${pct(r['Consistency %'])}</td>
+        <td>${Number(r['Final Score']||0).toFixed(2)}</td>`;
+      body.appendChild(tr);
+    });
+  }catch(e){
+    body.innerHTML = '<tr><td colspan="7">Network error</td></tr>';
+  }
+}
+</script>
+</body>
+</html>
