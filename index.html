@@ -16,8 +16,8 @@
   h1{font-size:1.6rem;margin:0}
   .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 24px rgba(0,0,0,.35)}
   label{display:block;font-weight:600;margin:10px 0 6px}
-  input,select,button,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid #273241;background:#0f1318;color:var(--text)}
-  .btn{background:#1f2937;border:1px solid #2b3746;cursor:pointer;transition:.15s transform ease, .2s background ease}
+  input,select,button{width:100%;padding:12px;border-radius:12px;border:1px solid #273241;background:#0f1318;color:var(--text)}
+  .btn{background:#1f2937;border:1px solid #2b3746;cursor:pointer;transition:.15s transform ease,.2s background ease}
   .btn:hover{background:#243041;transform:translateY(-1px)}
   .btn-primary{background:linear-gradient(90deg,#10b981,#22c55e);border:none;color:#062714;font-weight:700}
   .grid{display:grid;gap:12px}
@@ -39,6 +39,7 @@
   footer{margin-top:20px;color:#94a3b8;font-size:.9rem}
   .inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .note{font-size:.9rem;color:#cbd5e1}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:.9rem}
 </style>
 </head>
 <body>
@@ -56,6 +57,7 @@
       <button class="tab active" data-tab="hours">Weekly Hours</button>
       <button class="tab" data-tab="checkin">Monthly Check-in</button>
       <button class="tab" data-tab="board">Leaderboard</button>
+      <button class="tab" data-tab="diag">Diagnostics</button>
       <button class="tab" data-tab="info">Info</button>
     </div>
 
@@ -63,10 +65,7 @@
     <section id="baseline" class="card" style="display:none">
       <h2>Submit Baseline (Start & Target)</h2>
       <div class="grid grid-3">
-        <div>
-          <label>Name</label>
-          <select id="bName"></select>
-        </div>
+        <div><label>Name</label><select id="bName"></select></div>
         <div>
           <label>Goal Category</label>
           <select id="bCat">
@@ -76,22 +75,12 @@
             <option value="Bench Weight">Bench Weight (lb)</option>
           </select>
         </div>
-        <div>
-          <label>Start Value</label>
-          <input id="bStart" type="number" step="0.01" placeholder="e.g., 185 or 540" />
-        </div>
+        <div><label>Start Value</label><input id="bStart" type="number" step="0.01" placeholder="e.g., 185 or 540" /></div>
       </div>
       <div class="grid grid-2">
-        <div>
-          <label>Target Value</label>
-          <input id="bTarget" type="number" step="0.01" placeholder="e.g., 200 or 420" />
-        </div>
-        <div>
-          <label>Notes (optional)</label>
-          <input id="bNotes" placeholder="Any context for the admins" />
-        </div>
+        <div><label>Target Value</label><input id="bTarget" type="number" step="0.01" placeholder="e.g., 200 or 420" /></div>
+        <div><label>Notes (optional)</label><input id="bNotes" placeholder="Any context for the admins" /></div>
       </div>
-      <p class="note">Admins will review baselines and copy them into the official Roster.</p>
       <div class="inline" style="margin-top:10px">
         <button class="btn btn-primary" id="bSubmit">Submit Baseline</button>
         <span id="bMsg" class="badge muted"></span>
@@ -102,33 +91,19 @@
     <section id="hours" class="card">
       <h2>Submit Weekly Hours</h2>
       <div class="grid grid-3">
-        <div>
-          <label>Name</label>
-          <select id="hName"></select>
-        </div>
-        <div>
-          <label>Week # (1–13)</label>
-          <input id="hWeek" type="number" min="1" max="13" placeholder="e.g., 1" />
-        </div>
-        <div>
-          <label>Total Hours</label>
-          <input id="hHours" type="number" step="0.1" min="0" placeholder="e.g., 5.0" />
-        </div>
+        <div><label>Name</label><select id="hName"></select></div>
+        <div><label>Week # (1–13)</label><input id="hWeek" type="number" min="1" max="13" placeholder="e.g., 1" /></div>
+        <div><label>Total Hours</label><input id="hHours" type="number" step="0.1" min="0" placeholder="e.g., 5.0" /></div>
       </div>
-      <label>Dates (optional)</label>
-      <input id="hDates" placeholder="e.g., Oct 3 – Oct 9">
-      <label>Notes (optional)</label>
-      <input id="hNotes" placeholder="Optional notes">
+      <label>Dates (optional)</label><input id="hDates" placeholder="e.g., Oct 3 – Oct 9">
+      <label>Notes (optional)</label><input id="hNotes" placeholder="Optional notes">
       <div class="inline" style="margin-top:10px">
         <button class="btn btn-primary" id="hSubmit">Submit Hours</button>
         <span id="hMsg" class="badge muted"></span>
       </div>
 
       <div class="card" style="margin-top:16px">
-        <div class="inline" style="justify-content:space-between">
-          <h3 style="margin:0">Weekly Hours — Progress to Minimum</h3>
-          <button class="btn" id="refreshHours">Refresh</button>
-        </div>
+        <div class="inline" style="justify-content:space-between"><h3 style="margin:0">Weekly Hours — Progress to Minimum</h3><button class="btn" id="refreshHours">Refresh</button></div>
         <canvas id="hoursChart" height="120"></canvas>
         <div id="hoursBars" style="margin-top:12px"></div>
       </div>
@@ -138,10 +113,7 @@
     <section id="checkin" class="card" style="display:none">
       <h2>Submit Monthly Check-in</h2>
       <div class="grid grid-3">
-        <div>
-          <label>Name</label>
-          <select id="cName"></select>
-        </div>
+        <div><label>Name</label><select id="cName"></select></div>
         <div>
           <label>Goal Category</label>
           <select id="cCat">
@@ -151,14 +123,9 @@
             <option value="Bench Weight">Bench Weight (lb)</option>
           </select>
         </div>
-        <div>
-          <label>Date</label>
-          <input id="cDate" type="date" />
-        </div>
+        <div><label>Date</label><input id="cDate" type="date" /></div>
       </div>
-      <label>Current Value (number)</label>
-      <input id="cValue" type="number" step="0.01" placeholder="Number only" />
-      <p class="note">Pick which goal you’re updating. Example: Mile → enter seconds (e.g., 420 for 7:00).</p>
+      <label>Current Value (number)</label><input id="cValue" type="number" step="0.01" placeholder="Number only" />
       <div class="inline" style="margin-top:10px">
         <button class="btn btn-primary" id="cSubmit">Submit Check-in</button>
         <span id="cMsg" class="badge muted"></span>
@@ -172,27 +139,31 @@
         <button id="refreshBoard" class="btn">Refresh</button>
       </div>
       <table>
-        <thead>
-          <tr>
-            <th>#</th><th>Name</th><th>Category</th><th>Start → Target</th>
-            <th>Progress</th><th>Consistency</th><th>Final</th>
-          </tr>
-        </thead>
-        <tbody id="boardBody">
-          <tr><td colspan="7" class="muted">Loading…</td></tr>
-        </tbody>
+        <thead><tr><th>#</th><th>Name</th><th>Category</th><th>Start → Target</th><th>Progress</th><th>Consistency</th><th>Final</th></tr></thead>
+        <tbody id="boardBody"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
       </table>
-      <p class="note" style="margin-top:8px">Tie-breaker: higher consistency wins; then bonus/community vote if enabled.</p>
+    </section>
+
+    <!-- Diagnostics -->
+    <section id="diag" class="card" style="display:none">
+      <h2>Diagnostics</h2>
+      <div class="grid grid-2">
+        <button class="btn" id="btnOpenUrl">Open Web App URL</button>
+        <button class="btn" id="btnPing">POST: Ping</button>
+        <button class="btn" id="btnInit">POST: Init Sheets</button>
+        <button class="btn" id="btnSeedRoster">POST: Fix Roster Formulas</button>
+        <button class="btn" id="btnPostSample">POST: Sample Hours</button>
+      </div>
+      <pre id="diagOut" class="mono" style="margin-top:12px;white-space:pre-wrap;background:#0f1318;border:1px solid #273241;border-radius:12px;padding:12px;max-height:280px;overflow:auto"></pre>
     </section>
 
     <section id="info" class="card" style="display:none">
       <h2>How it Works</h2>
       <ul>
-        <li>Baseline: <b>5 hours/week</b> logged (editable in <b>Settings!B3</b>).</li>
-        <li>Categories: <b>Weight Loss (lb)</b>, <b>Mile Time (sec)</b>, <b>Bench Weight (lb)</b>.</li>
-        <li>Monthly check-ins (Nov 1, Dec 1, Jan 1) recommended.</li>
+        <li>Each person can set their own goal via <b>Baseline</b> (Start/Target).</li>
+        <li>Roster formulas auto-pull the <b>latest</b> baseline + check-ins and compute Progress/Consistency/Final.</li>
+        <li>If anything looks off, open <b>Diagnostics</b> and click <b>Fix Roster Formulas</b>.</li>
       </ul>
-      <p class="muted">Update <code>WEBAPP_URL</code>, <code>SECRET</code>, and <code>CONTESTANTS</code> in this file. Re-deploy Apps Script after code changes.</p>
     </section>
 
     <footer class="container" style="padding:0">
@@ -202,37 +173,35 @@
 
 <script>
 // === CONFIG ===
-const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz7mE2UDBSC4jc15lj7n8bTqY-mXJq8npKxHG_YtNr0tz8Phg14Smb3Fk1O1IuuBmek/exec'; // <-- your /exec URL
-const SECRET = 'FitnessChallenge2025'; // MUST equal SHARED_SECRET in Code.gs
+const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz7mE2UDBSC4jc15lj7n8bTqY-mXJq8npKxHG_YtNr0tz8Phg14Smb3Fk1O1IuuBmek/exec';
+const SECRET = 'FitnessChallenge2025';
 const CONTESTANTS = ['Jared','Daniel','Morgan','Caleb','Randy','Cindy','Contestant 7','Contestant 8'];
 
+// header pill
 document.getElementById('baselineTag').textContent = 'Baseline: 5 hr/wk';
 
-// Populate dropdowns
+// dropdowns
 function fillNames(){
-  ['bName','hName','cName'].forEach(id=>{
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = '<option value="">Select</option>' + CONTESTANTS.map(n=>`<option>${n}</option>`).join('');
-  });
+  const selects = ['bName','hName','cName'].map(id=>document.getElementById(id)).filter(Boolean);
+  selects.forEach(s => s.innerHTML = '<option value="">Select</option>' + CONTESTANTS.map(n=>`<option>${n}</option>`).join(''));
 }
 fillNames();
 
-// Tabs
+// tabs
 document.querySelectorAll('.tab').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const tab = btn.dataset.tab;
-    ['baseline','hours','checkin','board','info'].forEach(id=>{
+    ['baseline','hours','checkin','board','diag','info'].forEach(id=>{
       document.getElementById(id).style.display = (id===tab)?'block':'none';
     });
-    if (tab==='board') loadBoard();
-    if (tab==='hours') loadHoursVisual();
+    if(tab==='board') loadBoard();
+    if(tab==='hours') loadHoursVisual();
   });
 });
 
-// Robust fetch (text/plain to avoid preflight)
+// fetch helpers (text/plain → no preflight)
 async function postJSON(payload){
   try{
     const res = await fetch(WEBAPP_URL, {
@@ -245,10 +214,9 @@ async function postJSON(payload){
     catch { console.error('Non-JSON response:', text); return { ok:false, error:'Non-JSON response' }; }
   }catch(err){ console.error('Fetch failed:', err); return { ok:false, error:'Fetch failed' }; }
 }
-async function getJSON(qs=''){
-  const url = qs ? `${WEBAPP_URL}?${qs}` : WEBAPP_URL;
+async function getJSON(){
   try{
-    const res = await fetch(url);
+    const res = await fetch(WEBAPP_URL);
     const text = await res.text();
     try { return JSON.parse(text); }
     catch { console.error('Non-JSON response:', text); return { ok:false, error:'Non-JSON response' }; }
@@ -256,7 +224,7 @@ async function getJSON(qs=''){
 }
 function badge(el, ok, msg){ el.textContent = msg; el.className = 'badge ' + (ok ? 'ok' : 'err'); }
 
-// Buttons
+// baseline
 document.getElementById('bSubmit').onclick = async () => {
   const name = document.getElementById('bName').value.trim();
   const category = document.getElementById('bCat').value;
@@ -266,9 +234,10 @@ document.getElementById('bSubmit').onclick = async () => {
   const msg = document.getElementById('bMsg');
   if(!name || !category || isNaN(start) || isNaN(target)){ badge(msg,false,'Fill name, category, start, target'); return; }
   const r = await postJSON({type:'baseline', name, category, start, target, notes});
-  badge(msg, r.ok, r.ok ? 'Baseline submitted! (Admins will review)' : ('Error: ' + (r.error||'unknown')));
+  badge(msg, r.ok, r.ok ? 'Baseline submitted!' : ('Error: ' + (r.error||'unknown')));
 };
 
+// hours
 document.getElementById('hSubmit').onclick = async () => {
   const name = document.getElementById('hName').value.trim();
   const week = Number(document.getElementById('hWeek').value);
@@ -282,6 +251,7 @@ document.getElementById('hSubmit').onclick = async () => {
   if (r.ok) loadHoursVisual();
 };
 
+// check-in
 document.getElementById('cSubmit').onclick = async () => {
   const name = document.getElementById('cName').value.trim();
   const cat = document.getElementById('cCat').value;
@@ -293,12 +263,7 @@ document.getElementById('cSubmit').onclick = async () => {
   badge(msg, r.ok, r.ok ? 'Check-in submitted!' : ('Error: ' + (r.error||'unknown')));
 };
 
-// Diagnostics buttons (optional to add in UI, but callable here)
-window.healthCheck = async () => console.log('health:', await getJSON('action=health'));
-window.rebuildTabs  = async () => console.log('rebuild:', await getJSON('action=rebuild'));
-window.selfTestPost = async () => console.log('selftest:', await postJSON({type:'selftest'}));
-
-// Leaderboard
+// board
 document.getElementById('refreshBoard').onclick = loadBoard;
 async function loadBoard(){
   const tb = document.getElementById('boardBody');
@@ -323,32 +288,23 @@ async function loadBoard(){
   });
 }
 
-// Hours visuals
+// hours visuals
 document.getElementById('refreshHours').onclick = loadHoursVisual;
 let hoursChart;
 async function loadHoursVisual(){
   const data = await getJSON();
   if(!data.ok) return;
-
   const ppl = (data.hours || []);
   const required = (data.settings && data.settings.requiredTotal) || (5*13);
   const labels = ppl.map(p=>p.name);
   const totals = ppl.map(p=>p.totalHours);
-
   const ctx = document.getElementById('hoursChart').getContext('2d');
   if (hoursChart) hoursChart.destroy();
   hoursChart = new Chart(ctx, {
     type: 'bar',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Total Hours', data: totals },
-        { label: 'Required Minimum', data: labels.map(()=>required) }
-      ]
-    },
+    data: { labels, datasets: [ { label:'Total Hours', data: totals }, { label:'Required Minimum', data: labels.map(()=>required) } ] },
     options: { responsive:true, plugins:{ legend:{ position:'bottom' } }, scales:{ y:{ beginAtZero:true } } }
   });
-
   const wrap = document.getElementById('hoursBars');
   wrap.innerHTML = '';
   ppl.forEach(p=>{
@@ -360,15 +316,23 @@ async function loadHoursVisual(){
         <strong>${p.name}</strong>
         <span class="muted">${p.totalHours.toFixed(1)} / ${required.toFixed(1)} hrs (${(pct*100).toFixed(1)}%)</span>
       </div>
-      <div class="progress"><span style="width:${(pct*100).toFixed(1)}%"></span></div>`;
+      <div class="progress"><span style="width:${(pct*100).toFixed(1)}%"></span></div>
+    `;
     wrap.appendChild(row);
   });
-
   const bpw = (data.settings && data.settings.baselinePerWeek) || 5;
   document.getElementById('baselineTag').textContent = `Baseline: ${bpw} hr/wk`;
 }
 
-// Initial loads
+// diagnostics
+const out = (x) => document.getElementById('diagOut').textContent = typeof x === 'string' ? x : JSON.stringify(x,null,2);
+document.getElementById('btnOpenUrl').onclick  = () => window.open(WEBAPP_URL,'_blank');
+document.getElementById('btnPing').onclick     = async () => out(await postJSON({type:'ping'}));
+document.getElementById('btnInit').onclick     = async () => out(await postJSON({type:'init'}));
+document.getElementById('btnSeedRoster').onclick = async () => out(await postJSON({type:'seedRosterFormulas'}));
+document.getElementById('btnPostSample').onclick= async () => out(await postJSON({type:'hours', name:'Jared', week:1, hours:5, dates:'test', notes:'from diagnostics'}));
+
+// initial loads
 loadBoard();
 loadHoursVisual();
 </script>
