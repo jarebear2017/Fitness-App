@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Fitness Challenge Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root { --bg:#0b0d10; --card:#12161b; --muted:#9aa4af; --text:#e6edf3; --acc:#4ade80; --warn:#fbbf24; --err:#f87171; }
   *{box-sizing:border-box}
@@ -16,7 +17,6 @@
   .card{background:var(--card);border:1px solid #1f2937;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 4px 24px rgba(0,0,0,.35)}
   label{display:block;font-weight:600;margin:10px 0 6px}
   input,select,button,textarea{width:100%;padding:12px;border-radius:12px;border:1px solid #273241;background:#0f1318;color:var(--text)}
-  textarea{min-height:80px}
   .btn{background:#1f2937;border:1px solid #2b3746;cursor:pointer;transition:.15s transform ease, .2s background ease}
   .btn:hover{background:#243041;transform:translateY(-1px)}
   .btn-primary{background:linear-gradient(90deg,#10b981,#22c55e);border:none;color:#062714;font-weight:700}
@@ -34,6 +34,8 @@
   .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
   .tab{padding:8px 12px;border-radius:12px;border:1px solid #2b3746;background:#0f1318;color:#cbd5e1;cursor:pointer}
   .tab.active{background:#1f2937;color:#fff}
+  .progress{background:#0f172a;border:1px solid #334155;border-radius:999px;height:10px;width:100%;overflow:hidden}
+  .progress>span{display:block;height:100%;background:linear-gradient(90deg,#10b981,#22c55e);width:0%}
   footer{margin-top:20px;color:#94a3b8;font-size:.9rem}
   .inline{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .note{font-size:.9rem;color:#cbd5e1}
@@ -57,7 +59,7 @@
       <button class="tab" data-tab="info">Info</button>
     </div>
 
-    <!-- NEW: Baseline -->
+    <!-- Baseline -->
     <section id="baseline" class="card" style="display:none">
       <h2>Submit Baseline (Start & Target)</h2>
       <div class="grid grid-3">
@@ -96,6 +98,7 @@
       </div>
     </section>
 
+    <!-- Hours -->
     <section id="hours" class="card">
       <h2>Submit Weekly Hours</h2>
       <div class="grid grid-3">
@@ -120,8 +123,19 @@
         <button class="btn btn-primary" id="hSubmit">Submit Hours</button>
         <span id="hMsg" class="badge muted"></span>
       </div>
+
+      <!-- NEW: Visuals -->
+      <div class="card" style="margin-top:16px">
+        <div class="inline" style="justify-content:space-between">
+          <h3 style="margin:0">Weekly Hours — Progress to Minimum</h3>
+          <button class="btn" id="refreshHours">Refresh</button>
+        </div>
+        <canvas id="hoursChart" height="120"></canvas>
+        <div id="hoursBars" style="margin-top:12px"></div>
+      </div>
     </section>
 
+    <!-- Check-ins -->
     <section id="checkin" class="card" style="display:none">
       <h2>Submit Monthly Check-in</h2>
       <div class="grid grid-3">
@@ -152,10 +166,11 @@
       </div>
     </section>
 
+    <!-- Leaderboard -->
     <section id="board" class="card" style="display:none">
       <div class="inline" style="justify-content:space-between">
         <h2>Leaderboard</h2>
-        <button id="refresh" class="btn">Refresh</button>
+        <button id="refreshBoard" class="btn">Refresh</button>
       </div>
       <table>
         <thead>
@@ -174,12 +189,11 @@
     <section id="info" class="card" style="display:none">
       <h2>How it Works</h2>
       <ul>
-        <li>Baseline: <b>5 hours/week</b> logged.</li>
+        <li>Baseline: <b>5 hours/week</b> logged (editable in <b>Settings!B3</b>).</li>
         <li>Categories: <b>Weight Loss (lb)</b>, <b>Mile Time (sec)</b>, <b>Bench Weight (lb)</b>.</li>
         <li>Monthly check-ins (Nov 1, Dec 1, Jan 1) recommended.</li>
-        <li>Pick the goal on each check-in if you have two goals.</li>
       </ul>
-      <p class="muted">Powered by Google Apps Script + Google Sheets. Configure <code>WEBAPP_URL</code>, <code>SECRET</code>, and the <code>CONTESTANTS</code> list in the config section below.</p>
+      <p class="muted">Update <code>WEBAPP_URL</code>, <code>SECRET</code>, and <code>CONTESTANTS</code> in this file. Re-deploy Apps Script after code changes.</p>
     </section>
 
     <footer class="container" style="padding:0">
@@ -189,19 +203,17 @@
 
 <script>
 // === CONFIG ===
-const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbytPRAq-aEipRKzLslUoFJBnTAHDkOoI87DRMYnL1rdtLGNmnrMywXs-TH09FDufOLt/exec';
-const SECRET = 'FitnessChallenge2025';
-const CONTESTANTS = [
-  'Jared','Daniel','Morgan','Caleb',
-  'Randy','Cindy','Contestant 7','Contestant 8'
-];
+const WEBAPP_URL = 'YOUR_APPS_SCRIPT_WEBAPP_URL';
+const SECRET = 'YOUR_LONG_RANDOM_SECRET';
+const CONTESTANTS = ['Jared','Daniel','Morgan','Caleb','Randy','Cindy','Contestant 7','Contestant 8'];
+
+// Header tag
 document.getElementById('baselineTag').textContent = 'Baseline: 5 hr/wk';
 
 // Populate dropdowns
 function fillNames(){
-  const selects = [document.getElementById('bName'), document.getElementById('hName'),
-                   document.getElementById('cName')].filter(Boolean);
-  selects.forEach(s => { s.innerHTML = '<option value="">Select</option>' + CONTESTANTS.map(n=>`<option>${n}</option>`).join(''); });
+  const selects = ['bName','hName','cName'].map(id=>document.getElementById(id)).filter(Boolean);
+  selects.forEach(s => s.innerHTML = '<option value="">Select</option>' + CONTESTANTS.map(n=>`<option>${n}</option>`).join(''));
 }
 fillNames();
 
@@ -215,9 +227,11 @@ document.querySelectorAll('.tab').forEach(btn=>{
       document.getElementById(id).style.display = (id===tab)?'block':'none';
     });
     if(tab==='board') loadBoard();
+    if(tab==='hours') loadHoursVisual();
   });
 });
 
+// Robust fetch helper (shows server output in console if not JSON)
 async function postJSON(payload){
   try{
     const res = await fetch(WEBAPP_URL, {
@@ -227,15 +241,23 @@ async function postJSON(payload){
     });
     const text = await res.text();
     try { return JSON.parse(text); }
-    catch (e) {
-      console.error('Non-JSON response:', text);
-      return { ok:false, error:'Non-JSON response from server' };
-    }
-  }catch(err){
-    console.error('Fetch failed:', err);
-    return { ok:false, error:'Fetch failed (network/CORS)' };
-  }
+    catch { console.error('Non-JSON response:', text); return { ok:false, error:'Non-JSON response' }; }
+  }catch(err){ console.error('Fetch failed:', err); return { ok:false, error:'Fetch failed' }; }
 }
+async function getJSON(){
+  try{
+    const res = await fetch(WEBAPP_URL);
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch { console.error('Non-JSON response:', text); return { ok:false, error:'Non-JSON response' }; }
+  }catch(err){ console.error('Fetch failed:', err); return { ok:false, error:'Fetch failed' }; }
+}
+
+function badge(el, ok, msg){
+  el.textContent = msg;
+  el.className = 'badge ' + (ok ? 'ok' : 'err');
+}
+
 // Submit Baseline
 document.getElementById('bSubmit').onclick = async () => {
   const name = document.getElementById('bName').value.trim();
@@ -245,10 +267,8 @@ document.getElementById('bSubmit').onclick = async () => {
   const notes = document.getElementById('bNotes').value;
   const msg = document.getElementById('bMsg');
   if(!name || !category || isNaN(start) || isNaN(target)){ badge(msg,false,'Fill name, category, start, target'); return; }
-  try{
-    const r = await postJSON({type:'baseline', name, category, start, target, notes});
-    badge(msg, r.ok, r.ok ? 'Baseline submitted! (Admins will review)' : ('Error: ' + (r.error||'unknown')));
-  }catch(e){ badge(msg,false,'Network error'); }
+  const r = await postJSON({type:'baseline', name, category, start, target, notes});
+  badge(msg, r.ok, r.ok ? 'Baseline submitted! (Admins will review)' : ('Error: ' + (r.error||'unknown')));
 };
 
 // Submit Weekly Hours
@@ -260,10 +280,9 @@ document.getElementById('hSubmit').onclick = async () => {
   const notes = document.getElementById('hNotes').value;
   const msg = document.getElementById('hMsg');
   if(!name || !week || isNaN(hours)){ badge(msg,false,'Please fill name, week, and hours'); return; }
-  try{
-    const r = await postJSON({type:'hours', name, week, dates, hours, notes});
-    badge(msg, r.ok, r.ok ? 'Hours submitted!' : ('Error: ' + (r.error||'unknown')));
-  }catch(e){ badge(msg,false,'Network error'); }
+  const r = await postJSON({type:'hours', name, week, dates, hours, notes});
+  badge(msg, r.ok, r.ok ? 'Hours submitted!' : ('Error: ' + (r.error||'unknown')));
+  if (r.ok) loadHoursVisual();
 };
 
 // Submit Check-in
@@ -274,41 +293,91 @@ document.getElementById('cSubmit').onclick = async () => {
   const current = Number(document.getElementById('cValue').value);
   const msg = document.getElementById('cMsg');
   if(!name || !cat || !date || isNaN(current)){ badge(msg,false,'Fill name, category, date, and current value'); return; }
-  try{
-    const r = await postJSON({type:'checkin', name, category: cat, date, current});
-    badge(msg, r.ok, r.ok ? 'Check-in submitted!' : ('Error: ' + (r.error||'unknown')));
-  }catch(e){ badge(msg,false,'Network error'); }
+  const r = await postJSON({type:'checkin', name, category: cat, date, current});
+  badge(msg, r.ok, r.ok ? 'Check-in submitted!' : ('Error: ' + (r.error||'unknown')));
 };
 
-// Load Leaderboard
+// Leaderboard
+document.getElementById('refreshBoard').onclick = loadBoard;
 async function loadBoard(){
-  const body = document.getElementById('boardBody');
-  body.innerHTML = '<tr><td colspan="7" class="muted">Loading…</td></tr>';
-  try{
-    const res = await fetch(WEBAPP_URL);
-    const data = await res.json();
-    if(!data.ok){ body.innerHTML = '<tr><td colspan="7">Error loading board</td></tr>'; return; }
-    const rows = data.leaderboard
-      .filter(r => (r['#'] !== '' && r['#'] != null))
-      .sort((a,b)=> (Number(a['#'])||999) - (Number(b['#'])||999));
-    body.innerHTML='';
-    rows.forEach(r=>{
-      const tr = document.createElement('tr');
-      const pct = v => isNaN(Number(v)) ? '' : (Number(v)*100).toFixed(1)+'%';
-      tr.innerHTML = `
-        <td>${r['#']}</td>
-        <td>${r['Name']}</td>
-        <td>${r['Category']||''}</td>
-        <td>${r['Start → Target']||''}</td>
-        <td>${pct(r['Progress %'])}</td>
-        <td>${pct(r['Consistency %'])}</td>
-        <td>${Number(r['Final Score']||0).toFixed(2)}</td>`;
-      body.appendChild(tr);
-    });
-  }catch(e){
-    body.innerHTML = '<tr><td colspan="7">Network error</td></tr>';
-  }
+  const tb = document.getElementById('boardBody');
+  tb.innerHTML = '<tr><td colspan="7" class="muted">Loading…</td></tr>';
+  const data = await getJSON();
+  if(!data.ok){ tb.innerHTML = '<tr><td colspan="7">Error loading board</td></tr>'; return; }
+  const rows = (data.leaderboard || []).filter(r=>r['#']!=='' && r['#']!=null)
+                   .sort((a,b)=>(Number(a['#'])||999)-(Number(b['#'])||999));
+  tb.innerHTML = '';
+  const pct = v => isNaN(Number(v))? '' : (Number(v)*100).toFixed(1)+'%';
+  rows.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${r['#']}</td>
+      <td>${r['Name']}</td>
+      <td>${r['Category']||''}</td>
+      <td>${r['Start → Target']||''}</td>
+      <td>${pct(r['Progress %'])}</td>
+      <td>${pct(r['Consistency %'])}</td>
+      <td>${Number(r['Final Score']||0).toFixed(2)}</td>`;
+    tb.appendChild(tr);
+  });
 }
+
+// Hours visuals
+document.getElementById('refreshHours').onclick = loadHoursVisual;
+let hoursChart;
+async function loadHoursVisual(){
+  const data = await getJSON();
+  if(!data.ok) return;
+
+  const ppl = (data.hours || []);
+  const required = (data.settings && data.settings.requiredTotal) || (5*13);
+  const labels = ppl.map(p=>p.name);
+  const totals = ppl.map(p=>p.totalHours);
+
+  // Chart: total hours vs required minimum
+  const ctx = document.getElementById('hoursChart').getContext('2d');
+  if (hoursChart) hoursChart.destroy();
+  hoursChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Total Hours', data: totals },
+        { label: 'Required Minimum', data: labels.map(()=>required) }
+      ]
+    },
+    options: {
+      responsive:true,
+      plugins:{ legend:{ position:'bottom' } },
+      scales:{ y:{ beginAtZero:true } }
+    }
+  });
+
+  // Progress bars
+  const wrap = document.getElementById('hoursBars');
+  wrap.innerHTML = '';
+  ppl.forEach(p=>{
+    const pct = required ? Math.min(1, p.totalHours/required) : 0;
+    const row = document.createElement('div');
+    row.style.margin = '10px 0';
+    row.innerHTML = `
+      <div class="inline" style="justify-content:space-between;margin-bottom:6px">
+        <strong>${p.name}</strong>
+        <span class="muted">${p.totalHours.toFixed(1)} / ${required.toFixed(1)} hrs (${(pct*100).toFixed(1)}%)</span>
+      </div>
+      <div class="progress"><span style="width:${(pct*100).toFixed(1)}%"></span></div>
+    `;
+    wrap.appendChild(row);
+  });
+
+  // Update baseline pill
+  const bpw = (data.settings && data.settings.baselinePerWeek) || 5;
+  document.getElementById('baselineTag').textContent = `Baseline: ${bpw} hr/wk`;
+}
+
+// Initial loads
+loadBoard();
+loadHoursVisual();
 </script>
 </body>
 </html>
