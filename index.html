@@ -50,11 +50,51 @@
     </header>
 
     <div class="tabs">
+      <button class="tab" data-tab="baseline">Baseline</button>
       <button class="tab active" data-tab="hours">Weekly Hours</button>
       <button class="tab" data-tab="checkin">Monthly Check-in</button>
       <button class="tab" data-tab="board">Leaderboard</button>
       <button class="tab" data-tab="info">Info</button>
     </div>
+
+    <!-- NEW: Baseline -->
+    <section id="baseline" class="card" style="display:none">
+      <h2>Submit Baseline (Start & Target)</h2>
+      <div class="grid grid-3">
+        <div>
+          <label>Name</label>
+          <select id="bName"></select>
+        </div>
+        <div>
+          <label>Goal Category</label>
+          <select id="bCat">
+            <option value="">Select</option>
+            <option value="Weight Loss">Weight Loss (lb)</option>
+            <option value="Mile Time">Mile Time (sec)</option>
+            <option value="Bench Weight">Bench Weight (lb)</option>
+          </select>
+        </div>
+        <div>
+          <label>Start Value</label>
+          <input id="bStart" type="number" step="0.01" placeholder="e.g., 185 or 540" />
+        </div>
+      </div>
+      <div class="grid grid-2">
+        <div>
+          <label>Target Value</label>
+          <input id="bTarget" type="number" step="0.01" placeholder="e.g., 200 or 420" />
+        </div>
+        <div>
+          <label>Notes (optional)</label>
+          <input id="bNotes" placeholder="Any context for the admins" />
+        </div>
+      </div>
+      <p class="note">Admins will review baselines and copy them into the official Roster.</p>
+      <div class="inline" style="margin-top:10px">
+        <button class="btn btn-primary" id="bSubmit">Submit Baseline</button>
+        <span id="bMsg" class="badge muted"></span>
+      </div>
+    </section>
 
     <section id="hours" class="card">
       <h2>Submit Weekly Hours</h2>
@@ -149,30 +189,29 @@
 
 <script>
 // === CONFIG ===
-// Paste your Apps Script Web App URL here:
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbytPRAq-aEipRKzLslUoFJBnTAHDkOoI87DRMYnL1rdtLGNmnrMywXs-TH09FDufOLt/exec';
-// Create a long random secret and paste it in your Apps Script too:
 const SECRET = 'FitnessChallenge2025';
-
-// Set your 8 contestants here (names must match the Roster sheet exactly)
 const CONTESTANTS = [
   'Jared','Daniel','Morgan','Caleb',
   'Randy','Cindy','Contestant 7','Contestant 8'
 ];
 document.getElementById('baselineTag').textContent = 'Baseline: 5 hr/wk';
 
+// Populate dropdowns
 function fillNames(){
-  const selects = [document.getElementById('hName'), document.getElementById('cName')];
+  const selects = [document.getElementById('bName'), document.getElementById('hName'),
+                   document.getElementById('cName')].filter(Boolean);
   selects.forEach(s => { s.innerHTML = '<option value="">Select</option>' + CONTESTANTS.map(n=>`<option>${n}</option>`).join(''); });
 }
 fillNames();
 
+// Tabs
 document.querySelectorAll('.tab').forEach(btn=>{
-  btn.addEventListener('click', e=>{
+  btn.addEventListener('click', ()=>{
     document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     const tab = btn.dataset.tab;
-    ['hours','checkin','board','info'].forEach(id=>{
+    ['baseline','hours','checkin','board','info'].forEach(id=>{
       document.getElementById(id).style.display = (id===tab)?'block':'none';
     });
     if(tab==='board') loadBoard();
@@ -187,12 +226,27 @@ async function postJSON(payload){
   });
   return res.json();
 }
-
 function badge(el, ok, msg){
   el.textContent = msg;
   el.className = 'badge ' + (ok ? 'ok' : 'err');
 }
 
+// Submit Baseline
+document.getElementById('bSubmit').onclick = async () => {
+  const name = document.getElementById('bName').value.trim();
+  const category = document.getElementById('bCat').value;
+  const start = Number(document.getElementById('bStart').value);
+  const target = Number(document.getElementById('bTarget').value);
+  const notes = document.getElementById('bNotes').value;
+  const msg = document.getElementById('bMsg');
+  if(!name || !category || isNaN(start) || isNaN(target)){ badge(msg,false,'Fill name, category, start, target'); return; }
+  try{
+    const r = await postJSON({type:'baseline', name, category, start, target, notes});
+    badge(msg, r.ok, r.ok ? 'Baseline submitted! (Admins will review)' : ('Error: ' + (r.error||'unknown')));
+  }catch(e){ badge(msg,false,'Network error'); }
+};
+
+// Submit Weekly Hours
 document.getElementById('hSubmit').onclick = async () => {
   const name = document.getElementById('hName').value.trim();
   const week = Number(document.getElementById('hWeek').value);
@@ -207,6 +261,7 @@ document.getElementById('hSubmit').onclick = async () => {
   }catch(e){ badge(msg,false,'Network error'); }
 };
 
+// Submit Check-in
 document.getElementById('cSubmit').onclick = async () => {
   const name = document.getElementById('cName').value.trim();
   const cat = document.getElementById('cCat').value;
@@ -220,6 +275,7 @@ document.getElementById('cSubmit').onclick = async () => {
   }catch(e){ badge(msg,false,'Network error'); }
 };
 
+// Load Leaderboard
 async function loadBoard(){
   const body = document.getElementById('boardBody');
   body.innerHTML = '<tr><td colspan="7" class="muted">Loading…</td></tr>';
