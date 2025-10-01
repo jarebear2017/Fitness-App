@@ -219,18 +219,23 @@ document.querySelectorAll('.tab').forEach(btn=>{
 });
 
 async function postJSON(payload){
-  const res = await fetch(WEBAPP_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({...payload, secret: SECRET})
-  });
-  return res.json();
+  try{
+    const res = await fetch(WEBAPP_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({...payload, secret: SECRET})
+    });
+    const text = await res.text();
+    try { return JSON.parse(text); }
+    catch (e) {
+      console.error('Non-JSON response:', text);
+      return { ok:false, error:'Non-JSON response from server' };
+    }
+  }catch(err){
+    console.error('Fetch failed:', err);
+    return { ok:false, error:'Fetch failed (network/CORS)' };
+  }
 }
-function badge(el, ok, msg){
-  el.textContent = msg;
-  el.className = 'badge ' + (ok ? 'ok' : 'err');
-}
-
 // Submit Baseline
 document.getElementById('bSubmit').onclick = async () => {
   const name = document.getElementById('bName').value.trim();
