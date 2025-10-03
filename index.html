@@ -73,6 +73,8 @@
             <option value="Weight Loss">Weight Loss (lb)</option>
             <option value="Mile Time">Mile Time (sec)</option>
             <option value="Bench Weight">Bench Weight (lb)</option>
+            <option value="5k Time">5k Time (sec)</option>
+            <option value="Pushups">Pushups (consecutive)</option>
           </select>
         </div>
         <div><label>Start Value</label><input id="bStart" type="number" step="0.01" placeholder="e.g., 185 or 540" /></div>
@@ -85,6 +87,7 @@
         <button class="btn btn-primary" id="bSubmit">Submit Baseline</button>
         <span id="bMsg" class="badge muted"></span>
       </div>
+      <p class="note">Time goals (Mile/5k) should be entered in <b>seconds</b>. Pushups are a single max-rep set.</p>
     </section>
 
     <!-- Hours -->
@@ -121,6 +124,8 @@
             <option value="Weight Loss">Weight Loss (lb)</option>
             <option value="Mile Time">Mile Time (sec)</option>
             <option value="Bench Weight">Bench Weight (lb)</option>
+            <option value="5k Time">5k Time (sec)</option>
+            <option value="Pushups">Pushups (consecutive)</option>
           </select>
         </div>
         <div><label>Date</label><input id="cDate" type="date" /></div>
@@ -130,6 +135,7 @@
         <button class="btn btn-primary" id="cSubmit">Submit Check-in</button>
         <span id="cMsg" class="badge muted"></span>
       </div>
+      <p class="note">Enter time goals in <b>seconds</b> (e.g., 1500 for 25:00 5k).</p>
     </section>
 
     <!-- Leaderboard -->
@@ -160,9 +166,9 @@
     <section id="info" class="card" style="display:none">
       <h2>How it Works</h2>
       <ul>
-        <li>Each person can set their own goal via <b>Baseline</b> (Start/Target).</li>
+        <li>Each person sets their goal via <b>Baseline</b> (Start/Target).</li>
+        <li>Time goals (Mile/5k): lower is better; Weight Loss: lower is better; Bench/Pushups: higher is better.</li>
         <li>Roster formulas auto-pull the <b>latest</b> baseline + check-ins and compute Progress/Consistency/Final.</li>
-        <li>If anything looks off, open <b>Diagnostics</b> and click <b>Fix Roster Formulas</b>.</li>
       </ul>
     </section>
 
